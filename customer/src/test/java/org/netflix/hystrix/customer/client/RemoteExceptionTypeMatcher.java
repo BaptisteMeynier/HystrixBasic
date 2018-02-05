@@ -6,7 +6,7 @@ import org.hamcrest.TypeSafeMatcher;
 import org.netflix.hystrix.basic.common.exceptions.RemoteCallException;
 
 /**
- * Matcher permettant de vérifier le tyde d'une RemoteCallException
+ * Matcher permettant de vérifier le type d'une RemoteCallException
  */
 public class RemoteExceptionTypeMatcher extends TypeSafeMatcher<RemoteCallException> {
 

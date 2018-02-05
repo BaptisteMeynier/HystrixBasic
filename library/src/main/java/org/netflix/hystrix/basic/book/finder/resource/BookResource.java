@@ -4,40 +4,31 @@ package org.netflix.hystrix.basic.book.finder.resource;
 import org.netflix.hystrix.basic.book.finder.service.BookService;
 import org.netflix.hystrix.basic.common.model.Book;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
+
 
 import java.util.List;
-import java.util.Optional;
 
-@Component
-@Path("books")
-@Produces(MediaType.APPLICATION_JSON)
+
+@RestController
+@RequestMapping("/api/v1/books")
 public class BookResource {
 
 	@Autowired
 	private BookService bookService;
 
-	@GET
-	public Response findAll() {
-		List<Book> books = bookService.findAll();
-		return Response.ok(books).build();
+	@RequestMapping(value = "/{name}",	method = RequestMethod.GET)
+	public @ResponseBody Book findByName(@PathVariable("name") final String name) {
+		return bookService.findByName(name).get();
 	}
-
-	@GET
-	public Response findByName(@QueryParam("name") final String name) {
-		ResponseBuilder res = Response.noContent();
-		Optional<Book> book = bookService.findByName(name);
-		if(book.isPresent()) {
-			res =Response.ok(book.get());	
-		}
-		return res.build();    	
+	
+	@RequestMapping(method=RequestMethod.GET)
+	public @ResponseBody List<Book> findAll() {
+		return bookService.findAll();
 	}
 }

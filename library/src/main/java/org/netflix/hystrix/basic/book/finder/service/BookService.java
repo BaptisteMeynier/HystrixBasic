@@ -18,7 +18,7 @@ public class BookService {
 		library.add(new Book("OEdipe",15,1718));
 		library.add(new Book("La Henriade",5,1723));
 		library.add(new Book("Histoire de Charles XII",25,1731));
-		library.add(new Book("Zaïre",10,1732));
+		library.add(new Book("Zaire",10,1732));
 		library.add(new Book("Le Temple du Goût",2,1733));
 		library.add(new Book("Lettres Philosophiques",8,1734));
 		library.add(new Book("Traité de métaphysique",10,1735));

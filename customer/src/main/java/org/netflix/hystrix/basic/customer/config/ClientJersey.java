@@ -12,7 +12,6 @@ import javax.ws.rs.client.ClientBuilder;
 public class ClientJersey {
 
     public Client getClient() {
-        final ClientConfig config = new ClientConfig();
         return ClientBuilder.newBuilder()
                 .register(JacksonFeature.class)
                 .property(ClientProperties.READ_TIMEOUT, 5000)

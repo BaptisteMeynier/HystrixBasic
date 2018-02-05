@@ -10,21 +10,23 @@ import org.netflix.hystrix.basic.common.model.Book;
 import org.netflix.hystrix.basic.common.constantes.*;
 import org.netflix.hystrix.basic.common.exceptions.RemoteCallException;
 import org.netflix.hystrix.basic.customer.config.ClientJersey;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.util.ArrayList;
-import java.util.List;
-
+import static org.netflix.hystrix.basic.common.constantes.Constantes.BOOK_REMOTE_URI;
+import static org.netflix.hystrix.basic.common.constantes.Constantes.BOOK_PATH;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 @Component
 public class BookBorrower {
 	
+	private static final Logger logger = LoggerFactory.getLogger(BookBorrower.class);	
 	@Autowired
 	ClientJersey clientJersey;
 
@@ -33,25 +35,39 @@ public class BookBorrower {
 		Response response = null;
 		BookHystrixCommand hystrixCommand = null;
 		try {
-			UriBuilder uriBuilder = UriBuilder.fromUri("books").queryParam("name", name);
+		
+			final WebTarget target = clientJersey.getClient()
+					.target(BOOK_REMOTE_URI)
+					.path(BOOK_PATH)
+					.queryParam("name", name);
 			
-			final WebTarget target = clientJersey.getClient().target(uriBuilder);
+			logger.info(">0 Call service: "+ target.getUri());
 			final Invocation.Builder request = target.request(APPLICATION_JSON_TYPE);
 			hystrixCommand = new BookHystrixCommand(request);
 			response = hystrixCommand.execute();
+			//} catch (SocketTimeoutException e) {
 		} catch (HystrixRuntimeException e) {
 			if (hystrixCommand != null) {
 				hystrixCommand.closeConnection();
 			}
 			switch (e.getFailureType()) {
-			case TIMEOUT:
+			case TIMEOUT:{
+				logger.info(">1 TIMEOUT");
 				throw new RemoteCallException(RemoteCallException.ExceptionType.TIMEOUT, hystrixCommand.getExecutionTimeInMilliseconds(), e);
-			case SHORTCIRCUIT:
+			}
+			case SHORTCIRCUIT:{
+				logger.info(">2 SHORTCIRCUIT");
 				throw new RemoteCallException(RemoteCallException.ExceptionType.HYSTRIX_OPEN_CIRCUIT, hystrixCommand.getExecutionTimeInMilliseconds(), e);
-			case REJECTED_THREAD_EXECUTION:
+			}
+			case REJECTED_THREAD_EXECUTION:{
+				logger.info(">3 REJECTED_THREAD_EXECUTION");
 				throw new RemoteCallException(RemoteCallException.ExceptionType.HYSTRIX_REJECTED_THREAD_EXECUTION, hystrixCommand.getExecutionTimeInMilliseconds(), e);
+			}
 			default:
+			{
+				logger.info("4 DEFAULT");
 				throw new RemoteCallException(RemoteCallException.ExceptionType.OTHER, hystrixCommand.getExecutionTimeInMilliseconds(), e);
+			}
 			}
 		}
 
@@ -94,7 +110,7 @@ public class BookBorrower {
 
 		@Override
 		protected Response getFallback() {
-			return Response.ok(new Book("INCONNUE",0,0)).build();
+			return Response.ok(new Book("UNKNOW",0,0)).build();
 		}
 
 		public void closeConnection() {
