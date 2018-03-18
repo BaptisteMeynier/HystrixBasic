@@ -25,7 +25,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 @Component
 public class BookBorrower {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(BookBorrower.class);	
 	@Autowired
 	ClientJersey clientJersey;
@@ -35,12 +35,12 @@ public class BookBorrower {
 		Response response = null;
 		BookHystrixCommand hystrixCommand = null;
 		try {
-		
+
 			final WebTarget target = clientJersey.getClient()
 					.target(BOOK_REMOTE_URI)
 					.path(BOOK_PATH)
 					.queryParam("name", name);
-			
+
 			logger.info(">0 Call service: "+ target.getUri());
 			final Invocation.Builder request = target.request(APPLICATION_JSON_TYPE);
 			hystrixCommand = new BookHystrixCommand(request);
@@ -50,6 +50,7 @@ public class BookBorrower {
 			if (hystrixCommand != null) {
 				hystrixCommand.closeConnection();
 			}
+			logger.info("je jette une exception");
 			switch (e.getFailureType()) {
 			case TIMEOUT:{
 				logger.info(">1 TIMEOUT");
@@ -90,8 +91,7 @@ public class BookBorrower {
 					Setter.withGroupKey(Constantes.BOOK_HYSTRIX_COMMAND_GROUP_KEY)
 					.andCommandKey(Constantes.BOOK_HYSTRIX_COMMAND_KEY)
 					.andThreadPoolKey(Constantes.BOOK_HYSTRIX_POOL_KEY)
-					.andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties.Setter()
-							.withCoreSize(10))
+					.andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties.Setter().withCoreSize(10))
 					.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
 							.withExecutionTimeoutInMilliseconds(2000)
 							.withCircuitBreakerRequestVolumeThreshold(5)
@@ -110,7 +110,7 @@ public class BookBorrower {
 
 		@Override
 		protected Response getFallback() {
-			return Response.ok(new Book("UNKNOW",0,0)).build();
+			return Response.ok(new Book("HYSTRIX_DEFAULT_VALUE",0,0)).build();
 		}
 
 		public void closeConnection() {
@@ -119,5 +119,5 @@ public class BookBorrower {
 			}
 		}
 	}
-	
+
 }
